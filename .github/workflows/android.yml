@@ -13,19 +13,27 @@ jobs:
       with:
         go-version: '1.22'
 
-    # 2. Compila a ferramenta Fyne-Cross (Método Manual Infalível)
-    # A Estratégia: Clona tudo, entra na pasta, força a ida para a versão v2.7.0
-    - name: Compilar Fyne-Cross
+    # 2. Compila o Fyne-Cross baixando o ZIP do código fonte
+    # Isso evita erros de Git, Proxy, Docker e Versão.
+    - name: Compilar Fyne-Cross (Via ZIP)
       run: |
-        git clone https://github.com/fyne-io/fyne-cross.git
-        cd fyne-cross
-        git checkout v2.7.0
+        # Baixa o código fonte da versão v2.7.0
+        wget https://github.com/fyne-io/fyne-cross/archive/refs/tags/v2.7.0.zip
+        unzip v2.7.0.zip
+        
+        # Entra na pasta descompactada (o GitHub nomeia assim)
+        cd fyne-cross-2.7.0
+        
+        # Compila
+        go mod tidy
         go build -o fyne-cross ./cmd/fyne-cross
+        
+        # Move para a pasta de executáveis e volta para a raiz
         sudo mv fyne-cross /usr/local/bin/
         cd ..
 
     # 3. Compila o APK
-    # (Pode demorar 3-5 minutos baixando a imagem Docker na primeira vez)
+    # (Pode demorar 3-5 minutos baixando a imagem Docker interna na primeira vez)
     - name: Compilar APK
       run: |
         fyne-cross android -appID com.rcappelatti.scanner -name "ScannerApp" -release=false
