@@ -1,4 +1,4 @@
-name: Build Android Final
+name: Build Android Source
 on: [push]
 
 jobs:
@@ -7,21 +7,29 @@ jobs:
     steps:
     - uses: actions/checkout@v4
 
-    # 1. Baixa o arquivo compactado EXATO da versão v2.7.0
-    - name: Baixar Fyne-Cross
-      run: |
-        wget https://github.com/fyne-io/fyne-cross/releases/download/v2.7.0/fyne-cross_v2.7.0_linux_amd64.tar.gz
-        tar -xzf fyne-cross_v2.7.0_linux_amd64.tar.gz
-        chmod +x fyne-cross
-        sudo mv fyne-cross /usr/local/bin/
+    # 1. Configura o Go
+    - name: Configurar Go
+      uses: actions/setup-go@v5
+      with:
+        go-version: '1.22'
 
-    # 2. Compila (Agora temos o binário 'fyne-cross' pronto no sistema)
-    # Nota: Na primeira vez, este passo vai demorar uns 2-3 minutos baixando a imagem Docker interna
+    # 2. Compila a ferramenta Fyne-Cross a partir do código fonte
+    # Assim não dependemos de links quebrados ou versões confusas
+    - name: Compilar Fyne-Cross do Zero
+      run: |
+        git clone https://github.com/fyne-io/fyne-cross.git
+        cd fyne-cross
+        go build -o fyne-cross ./cmd/fyne-cross
+        sudo mv fyne-cross /usr/local/bin/
+        cd ..
+
+    # 3. Roda o Build do seu App
+    # A primeira vez vai demorar uns 2-3 min baixando a imagem Docker interna
     - name: Compilar APK
       run: |
         fyne-cross android -appID com.rcappelatti.scanner -name "ScannerApp" -release=false
 
-    # 3. Sobe o APK gerado
+    # 4. Upload do resultado
     - name: Upload APK
       uses: actions/upload-artifact@v4
       with:
