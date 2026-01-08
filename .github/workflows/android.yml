@@ -7,20 +7,25 @@ jobs:
     steps:
     - uses: actions/checkout@v4
 
+    # 1. Instala o Go
     - name: Configurar Go
       uses: actions/setup-go@v5
       with:
         go-version: '1.22'
 
-    - name: Instalar Fyne-Cross (Versão Fixa)
-      # CORREÇÃO: Voltamos para /v2/ e forçamos a versão @v2.7.0
-      run: go install github.com/fyne-io/fyne-cross/v2/cmd/fyne-cross@v2.7.0
+    # 2. MUDANÇA AQUI: Baixa o binário pronto (v2.7.0) em vez de compilar
+    - name: Instalar Fyne-Cross (Binário Direto)
+      run: |
+        wget -O fyne-cross https://github.com/fyne-io/fyne-cross/releases/download/v2.7.0/fyne-cross_linux-amd64
+        chmod +x fyne-cross
+        sudo mv fyne-cross /usr/local/bin/
 
+    # 3. Compila (Agora vai funcionar pois o comando 'fyne-cross' existe)
     - name: Compilar APK
-      # O comando agora usa o fyne-cross que acabamos de instalar
       run: |
         fyne-cross android -appID com.rcappelatti.scanner -name "ScannerApp" -release=false
 
+    # 4. Sobe o arquivo
     - name: Upload APK
       uses: actions/upload-artifact@v4
       with:
