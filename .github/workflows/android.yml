@@ -7,26 +7,26 @@ jobs:
     steps:
     - uses: actions/checkout@v4
 
-    # 1. Instala o Go
+    # 1. Configura o Go
     - name: Configurar Go
       uses: actions/setup-go@v5
       with:
         go-version: '1.22'
 
-    # 2. Instala o Fyne-Cross (Versão v2 Latest)
-    # Adicionamos o diretório bin do Go ao PATH para o Linux encontrar o comando
+    # 2. Instala o Fyne-Cross (Bypassing Proxy)
+    # O comando GOPROXY=direct resolve o problema da versão v1.6.1
     - name: Instalar Fyne-Cross
       run: |
+        go env -w GOPROXY=direct
         go install github.com/fyne-io/fyne-cross/v2/cmd/fyne-cross@latest
         echo "$(go env GOPATH)/bin" >> $GITHUB_PATH
 
-    # 3. Compila
-    # Agora o sistema vai achar o comando 'fyne-cross'
+    # 3. Compila o APK
     - name: Compilar APK
       run: |
         fyne-cross android -appID com.rcappelatti.scanner -name "ScannerApp" -release=false
 
-    # 4. Sobe o arquivo
+    # 4. Sobe o Artefato
     - name: Upload APK
       uses: actions/upload-artifact@v4
       with:
