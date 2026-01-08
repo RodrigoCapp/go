@@ -5,26 +5,22 @@ jobs:
   build:
     runs-on: ubuntu-latest
     steps:
-    # 1. Baixa seu código
     - uses: actions/checkout@v4
 
-    # 2. Instala o Go (Versão estável mais recente)
     - name: Configurar Go
       uses: actions/setup-go@v5
       with:
         go-version: '1.22'
 
-    # 3. Instala a ferramenta fyne-cross manualmente (Do jeito oficial)
     - name: Instalar Fyne-Cross
-      run: go install github.com/fyne-io/fyne-cross/v2/cmd/fyne-cross@latest
+      # CORREÇÃO AQUI: Mudamos de /v2/ para /v3/
+      run: go install github.com/fyne-io/fyne-cross/v3/cmd/fyne-cross@latest
 
-    # 4. Roda o Build (Isso vai baixar o Docker e compilar)
-    # O comando é igual ao que usaríamos no PC
     - name: Compilar APK
+      # O comando agora vai funcionar porque baixamos a ferramenta certa
       run: |
         fyne-cross android -appID com.rcappelatti.scanner -name "ScannerApp" -release=false
 
-    # 5. Sobe o arquivo gerado
     - name: Upload APK
       uses: actions/upload-artifact@v4
       with:
