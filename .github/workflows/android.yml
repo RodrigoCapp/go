@@ -13,32 +13,30 @@ jobs:
       with:
         go-version: '1.22'
 
-    # 2. Compila o Fyne-Cross baixando o ZIP do código fonte
-    # Isso evita erros de Git, Proxy, Docker e Versão.
-    - name: Compilar Fyne-Cross (Via ZIP)
+    # 2. Instala a ferramenta Fyne-Cross (Modo Varredura)
+    - name: Instalar Fyne-Cross
       run: |
-        # Baixa o código fonte da versão v2.7.0
-        wget https://github.com/fyne-io/fyne-cross/archive/refs/tags/v2.7.0.zip
-        unzip v2.7.0.zip
+        # Clona a versão mais recente (Master)
+        git clone https://github.com/fyne-io/fyne-cross.git
         
-        # Entra na pasta descompactada (o GitHub nomeia assim)
-        cd fyne-cross-2.7.0
+        # Entra na pasta
+        cd fyne-cross
         
-        # Compila
-        go mod tidy
-        go build -o fyne-cross ./cmd/fyne-cross
+        # COMANDO MÁGICO: Instala todos os executáveis encontrados recursivamente
+        # Isso evita erros de "diretório não encontrado"
+        go install ./...
         
-        # Move para a pasta de executáveis e volta para a raiz
-        sudo mv fyne-cross /usr/local/bin/
-        cd ..
+        # Adiciona o local onde foi instalado ao PATH do sistema
+        echo "$(go env GOPATH)/bin" >> $GITHUB_PATH
 
     # 3. Compila o APK
-    # (Pode demorar 3-5 minutos baixando a imagem Docker interna na primeira vez)
+    # O comando 'fyne-cross' agora estará disponível globalmente
     - name: Compilar APK
       run: |
         fyne-cross android -appID com.rcappelatti.scanner -name "ScannerApp" -release=false
 
     # 4. Upload do resultado
+    # O apk será gerado na pasta do seu projeto
     - name: Upload APK
       uses: actions/upload-artifact@v4
       with:
