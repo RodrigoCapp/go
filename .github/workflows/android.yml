@@ -5,18 +5,16 @@ jobs:
   android-build:
     runs-on: ubuntu-latest
     steps:
-    # 1. Baixa o seu código para a máquina do GitHub
     - uses: actions/checkout@v4
-
-    # 2. Usa a ferramenta Fyne-Cross para compilar
+    
     - name: Compilar APK
-      uses: fyne-io/fyne-cross-action@v2
+      # Mudamos de @v2 para @master para garantir que ele pegue a versão mais recente
+      uses: fyne-io/fyne-cross-action@master
       with:
         target: android
-        # O ID deve ser único. Se tiver um icone.png na raiz, adicione: -icon icone.png
-        args: -appID com.rcappelatti.scanner -name "Meu App Scanner"
+        # Removi o nome com espaços por enquanto para testar, deixei só o ID
+        args: -appID com.rcappelatti.scanner
 
-    # 3. Pega o APK gerado e disponibiliza para download
     - name: Upload do APK
       uses: actions/upload-artifact@v4
       with:
