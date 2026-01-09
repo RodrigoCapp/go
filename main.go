@@ -22,13 +22,9 @@ func main() {
 	myWindow = myApp.NewWindow("Acessa ERP")
 	myWindow.Resize(fyne.NewSize(400, 700))
 
-	// 1. CARREGAR A IMAGEM COMO UM "RECURSO"
-	var err error
-	resourceLogo, err = fyne.LoadResourceFromPath("logo_acessa_erp.png")
-	if err != nil {
-		resourceLogo = theme.WarningIcon()
-		println("Erro: Imagem logo_acessa_erp.png não encontrada")
-	}
+
+	resourceLogo = resourceLogoacessaerpPng
+	// ---------------------
 
 	// Inicia mostrando a Tela de Splash (Abertura)
 	mostrarTelaSplash()
