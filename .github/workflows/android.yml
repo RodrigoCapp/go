@@ -21,7 +21,7 @@ jobs:
 
     - name: Compilar APK
       run: |
-        fyne-cross android -app-id com.rcappelatti.scanner -name "AcessaERP"
+        fyne-cross android -app-id com.rcappelatti.scanner -name "AcessaERP" -icon "Icon.png"
 
     # CORREÇÃO FINAL: Mudamos de /bin/ para /dist/
     - name: Upload APK
