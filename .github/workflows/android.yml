@@ -1,4 +1,4 @@
-name: Build Android Manual
+name: Build Android Final
 on: [push]
 
 jobs:
@@ -13,16 +13,19 @@ jobs:
         go-version: '1.22'
 
     - name: Instalar Fyne-Cross
-      # CORREÇÃO AQUI: Mudamos de /v2/ para /v3/
-      run: go install github.com/fyne-io/fyne-cross/v3/cmd/fyne-cross@latest
+      run: |
+        git clone https://github.com/fyne-io/fyne-cross.git
+        cd fyne-cross
+        go install ./...
+        echo "$(go env GOPATH)/bin" >> $GITHUB_PATH
 
     - name: Compilar APK
-      # O comando agora vai funcionar porque baixamos a ferramenta certa
       run: |
-        fyne-cross android -appID com.rcappelatti.scanner -name "AcessaERP" -release=false
+        fyne-cross android -app-id com.rcappelatti.scanner -name "AcessaERP"
 
+    # CORREÇÃO FINAL: Mudamos de /bin/ para /dist/
     - name: Upload APK
       uses: actions/upload-artifact@v4
       with:
         name: app-android
-        path: fyne-cross/bin/android/*.apk
+        path: fyne-cross/dist/android/*.apk
