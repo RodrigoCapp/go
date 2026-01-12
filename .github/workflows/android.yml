@@ -1,4 +1,4 @@
-name: Build Android Final
+name: Build Android Manual
 on: [push]
 
 jobs:
@@ -13,19 +13,16 @@ jobs:
         go-version: '1.22'
 
     - name: Instalar Fyne-Cross
-      run: |
-        git clone https://github.com/fyne-io/fyne-cross.git
-        cd fyne-cross
-        go install ./...
-        echo "$(go env GOPATH)/bin" >> $GITHUB_PATH
+      run: go install github.com/fyne-io/fyne-cross/v3/cmd/fyne-cross@latest
 
     - name: Compilar APK
+      # ADICIONADO: a flag -icon "Icon.png"
+      # Certifique-se de que o arquivo Icon.png existe na raiz do projeto
       run: |
-        fyne-cross android -app-id com.rcappelatti.scanner -name "ScannerApp"
+        fyne-cross android -appID com.rcappelatti.scanner -name "AcessaERP" -icon "Icon.png" -release=false
 
-    # CORREÇÃO FINAL: Mudamos de /bin/ para /dist/
     - name: Upload APK
       uses: actions/upload-artifact@v4
       with:
         name: app-android
-        path: fyne-cross/dist/android/*.apk
+        path: fyne-cross/bin/android/*.apk
