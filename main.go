@@ -1,146 +1,176 @@
 package main
 
 import (
+	"image/color"
+
 	"fyne.io/fyne/v2"
 	"fyne.io/fyne/v2/app"
 	"fyne.io/fyne/v2/canvas"
 	"fyne.io/fyne/v2/container"
+	"fyne.io/fyne/v2/dialog"
 	"fyne.io/fyne/v2/layout"
 	"fyne.io/fyne/v2/theme"
 	"fyne.io/fyne/v2/widget"
 )
 
-// Variáveis globais para facilitar o acesso entre telas
+// Variáveis globais
 var myApp fyne.App
 var myWindow fyne.Window
-var resourceLogo fyne.Resource // Vamos carregar a imagem na memória aqui
+
+// Variável que virá do arquivo bundled.go
+var resourceLogo fyne.Resource
 
 func main() {
 	myApp = app.New()
-	myApp.Settings().SetTheme(theme.LightTheme())
+	
+	// Tema escuro para visual moderno
+	myApp.Settings().SetTheme(theme.DarkTheme())
 
 	myWindow = myApp.NewWindow("Acessa ERP")
-	myWindow.Resize(fyne.NewSize(400, 700))
+	myWindow.Resize(fyne.NewSize(900, 600))
+	myWindow.CenterOnScreen()
 
-
+	// -------------------------------------------------------------------------
+	// IMPORTANTE: Certifique-se de que a variável abaixo tem o MESMO nome
+	// da variável gerada dentro do seu arquivo 'bundled.go'.
+	// O padrão do fyne bundle é 'resourceNomeDoArquivoPng'.
+	// -------------------------------------------------------------------------
 	resourceLogo = resourceLogoacessaerpPng
-	// ---------------------
 
-	// Inicia mostrando a Tela de Splash (Abertura)
-	mostrarTelaSplash()
+	// Inicia na Tela de Login
+	mostrarTelaLogin()
 
 	myWindow.ShowAndRun()
 }
 
-// --- TELA 1: SPLASH SCREEN (Abertura) ---
-func mostrarTelaSplash() {
-	// 1. Criamos a imagem separada do botão para termos controle total do tamanho
+// --- TELA 1: LOGIN (Entrada do Sistema) ---
+func mostrarTelaLogin() {
+	// 1. Logo
 	imgLogo := canvas.NewImageFromResource(resourceLogo)
 	imgLogo.FillMode = canvas.ImageFillContain
-	
-	// FORÇAMOS UM TAMANHO MÍNIMO (Aqui você controla o tamanho do logo)
-	imgLogo.SetMinSize(fyne.NewSize(250, 250)) 
+	imgLogo.SetMinSize(fyne.NewSize(180, 180))
 
-	// 2. Botão para entrar
-	btnEntrar := widget.NewButton("Acessar Sistema", func() {
-		mostrarTelaPrincipal()
+	// 2. Campos de Entrada
+	inputUsuario := widget.NewEntry()
+	inputUsuario.PlaceHolder = "Usuário"
+	inputUsuario.ActionItem = widget.NewIcon(theme.AccountIcon()) 
+
+	inputSenha := widget.NewPasswordEntry()
+	inputSenha.PlaceHolder = "Senha"
+	// CORREÇÃO: Substituímos theme.KeyIcon (que não existe) por theme.LoginIcon
+	inputSenha.ActionItem = widget.NewIcon(theme.LoginIcon()) 
+
+	// 3. Botão de Entrar
+	btnEntrar := widget.NewButton("ACESSAR SISTEMA", func() {
+		// --- LÓGICA DE VALIDAÇÃO ---
+		if inputUsuario.Text == "admin" && inputSenha.Text == "123" {
+			mostrarTelaPrincipal()
+		} else {
+			dialog.ShowInformation("Erro de Acesso", "Usuário ou senha incorretos.\nTente: admin / 123", myWindow)
+		}
 	})
-	// Define o botão como "Primário" (Azul/Destacado)
-	btnEntrar.Importance = widget.HighImportance 
+	btnEntrar.Importance = widget.HighImportance // Botão destacado
 
-	// 3. Montamos o layout: Imagem em cima, botão embaixo
-	boxVertical := container.NewVBox(
-		imgLogo,
-		widget.NewSeparator(), // Um espacinho entre a imagem e o botão
+	// 4. Montagem do Layout
+	formContainer := container.NewVBox(
+		widget.NewLabelWithStyle("Bem-vindo de volta!", fyne.TextAlignCenter, fyne.TextStyle{Bold: true}),
+		widget.NewSeparator(),
+		inputUsuario,
+		inputSenha,
+		layout.NewSpacer(),
 		btnEntrar,
 	)
 
-	// Centralizamos tudo na tela
-	conteudo := container.NewCenter(boxVertical)
+	cardLogin := widget.NewCard("", "", container.NewPadded(formContainer))
+	
+	conteudo := container.NewCenter(
+		container.NewVBox(
+			imgLogo,
+			container.NewGridWrap(fyne.NewSize(300, 260), cardLogin),
+			widget.NewLabelWithStyle("Versão 1.0.0", fyne.TextAlignCenter, fyne.TextStyle{Italic: true}),
+		),
+	)
 
 	myWindow.SetContent(conteudo)
 }
 
-// --- TELA 2: SISTEMA PRINCIPAL (Menu + Conteúdo) ---
+// --- TELA 2: SISTEMA PRINCIPAL ---
 func mostrarTelaPrincipal() {
-	// 1. Área de Conteúdo (Onde as telas vão mudar)
 	conteudoPrincipal := container.NewMax()
-
-	// Define a tela inicial (Dashboard)
 	conteudoPrincipal.Objects = []fyne.CanvasObject{criarDashboard()}
+	conteudoPrincipal.Refresh()
 
-	// Função auxiliar para trocar o conteúdo do centro
 	navegarPara := func(tela fyne.CanvasObject) {
 		conteudoPrincipal.Objects = []fyne.CanvasObject{tela}
 		conteudoPrincipal.Refresh()
 	}
 
-	// 2. Barra Superior (Logo pequena + Título)
-	// Usamos NewGridWrap para forçar a logo a ficar pequena (ex: 50x50)
+	// Header
 	logoPequena := widget.NewIcon(resourceLogo)
-	containerLogo := container.NewGridWrap(fyne.NewSize(50, 50), logoPequena)
-
-	tituloTopo := widget.NewLabel("Sistema Integrado")
+	tituloTopo := widget.NewLabel("SISTEMA INTEGRADO")
 	tituloTopo.TextStyle = fyne.TextStyle{Bold: true}
 
-	// Botão para voltar à tela de splash (Logout)
-	btnSair := widget.NewButtonWithIcon("", theme.LogoutIcon(), func() { mostrarTelaSplash() })
+	btnSair := widget.NewButtonWithIcon("Sair", theme.LogoutIcon(), func() { 
+		mostrarTelaLogin() 
+	})
+	btnSair.Importance = widget.LowImportance
 
-	barraSuperior := container.NewHBox(
-		containerLogo,
+	header := container.NewPadded(container.NewHBox(
+		container.NewGridWrap(fyne.NewSize(40, 40), logoPequena),
 		tituloTopo,
-		layout.NewSpacer(), // Empurra o botão sair para a direita
+		layout.NewSpacer(),
+		widget.NewLabel("Usuário: Admin"),
 		btnSair,
-	)
+	))
 
-	// 3. Menu Lateral
-	btnDash := widget.NewButtonWithIcon("Início", theme.HomeIcon(), func() {
-		navegarPara(criarDashboard())
-	})
-	btnClientes := widget.NewButtonWithIcon("Clientes", theme.AccountIcon(), func() {
-		navegarPara(criarTelaClientes())
-	})
-	btnEstoque := widget.NewButtonWithIcon("Estoque", theme.StorageIcon(), func() {
-		navegarPara(criarTelaEstoque())
-	})
+	// Menu
+	criarBotao := func(t string, i fyne.Resource, f func()) *widget.Button {
+		b := widget.NewButtonWithIcon(t, i, f)
+		b.Alignment = widget.ButtonAlignLeading
+		b.Importance = widget.MediumImportance
+		return b
+	}
 
-	menuLateral := container.NewVBox(
-		widget.NewLabel("MENU"),
+	menu := container.NewHBox(
+		container.NewPadded(container.NewVBox(
+			criarBotao("Início", theme.HomeIcon(), func() { navegarPara(criarDashboard()) }),
+			criarBotao("Clientes", theme.AccountIcon(), func() { navegarPara(criarTelaClientes()) }),
+			criarBotao("Estoque", theme.StorageIcon(), func() { navegarPara(criarTelaEstoque()) }),
+		)),
 		widget.NewSeparator(),
-		btnDash,
-		btnClientes,
-		btnEstoque,
 	)
 
-	// 4. Montagem do Layout (BorderLayout)
-	layoutFinal := container.NewBorder(barraSuperior, nil, menuLateral, nil, conteudoPrincipal)
-
+	layoutFinal := container.NewBorder(header, nil, menu, nil, container.NewPadded(conteudoPrincipal))
 	myWindow.SetContent(layoutFinal)
 }
 
-// --- FUNÇÕES AUXILIARES QUE CRIAM O CONTEÚDO DAS TELAS ---
+// --- FUNÇÕES AUXILIARES ---
 
 func criarDashboard() fyne.CanvasObject {
-	return container.NewCenter(
-		widget.NewLabel("Bem-vindo ao Dashboard! Selecione uma opção no menu."),
+	lbl := canvas.NewText("Visão Geral", theme.ForegroundColor())
+	lbl.TextSize = 24
+	lbl.TextStyle = fyne.TextStyle{Bold: true}
+
+	grid := container.NewGridWithColumns(3,
+		cardMetrica("Faturamento", "R$ 4.350", theme.ConfirmIcon(), color.RGBA{0, 150, 0, 255}),
+		cardMetrica("Pedidos", "12", theme.InfoIcon(), color.RGBA{0, 0, 150, 255}),
+		cardMetrica("Alertas", "3", theme.WarningIcon(), color.RGBA{200, 100, 0, 255}),
 	)
+	return container.NewVBox(lbl, widget.NewSeparator(), grid)
+}
+
+func cardMetrica(t, v string, i fyne.Resource, c color.Color) fyne.CanvasObject {
+	return widget.NewCard("", "", container.NewPadded(
+		container.NewBorder(nil, nil, widget.NewIcon(i), nil,
+			container.NewVBox(widget.NewLabel(t), 
+			canvas.NewText(v, theme.ForegroundColor()))),
+	))
 }
 
 func criarTelaClientes() fyne.CanvasObject {
-	lista := widget.NewList(
-		func() int { return 5 }, // 5 clientes de exemplo
-		func() fyne.CanvasObject { return widget.NewLabel("Template") },
-		func(i widget.ListItemID, o fyne.CanvasObject) {
-			o.(*widget.Label).SetText("Cliente Exemplo " + string(rune('A'+i)))
-		},
-	)
-	return container.NewBorder(widget.NewLabelWithStyle("Lista de Clientes", fyne.TextAlignCenter, fyne.TextStyle{Bold: true}), nil, nil, nil, lista)
+	return container.NewCenter(widget.NewLabel("Tela de Clientes"))
 }
 
 func criarTelaEstoque() fyne.CanvasObject {
-	return container.NewVBox(
-		widget.NewLabelWithStyle("Controle de Estoque", fyne.TextAlignCenter, fyne.TextStyle{Bold: true}),
-		widget.NewProgressBarInfinite(), // Apenas visual
-		widget.NewButton("Adicionar Produto", func() { println("Adicionando...") }),
-	)
+	return container.NewCenter(widget.NewLabel("Tela de Estoque"))
 }
